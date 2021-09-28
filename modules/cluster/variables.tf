@@ -401,3 +401,8 @@ variable "tls_cert" {
   type        = string
   default     = ""
 }
+variable "instance_type" {
+  description = "instances type for ASG instance type"
+  type        = string
+  default     = "t3.large"
+}

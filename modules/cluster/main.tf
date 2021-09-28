@@ -77,10 +77,45 @@ module "eks" {
   vpc_id          = module.vpc.vpc_id
   subnets         = module.vpc.public_subnets
 
-  worker_groups = [
-    {
-      instance_type = "t3.large"
-      asg_max_size  = 3
+  # worker_groups = [
+  #   {
+  #     instance_type = var.instance_type
+  #     asg_max_size  = 3
+  #   }
+  # ]
+
+  # Managed Node Groups
+  node_groups_defaults = {
+    ami_type  = var.node_group_ami #"AL2_x86_64"
+    disk_size = 50
+  }
+
+  node_groups = {
+    dev-ng = {
+      desired_capacity = 1
+      max_capacity     = 10
+      min_capacity     = 1
+
+      instance_types = ["t3.large"]
+      capacity_type  = "SPOT"
+      k8s_labels = {
+        Environment = "test"
+        GithubRepo  = "terraform-aws-eks"
+        GithubOrg   = "terraform-aws-modules"
+      }
+      # additional_tags = {
+      #   ExtraTag = "example"
+      # }
+      # taints = [
+      #   {
+      #     key    = "dedicated"
+      #     value  = "gpuGroup"
+      #     effect = "NO_SCHEDULE"
+      #   }
+      # ]
+      update_config = {
+        max_unavailable_percentage = 50 # or set `max_unavailable`
+      }
     }
-  ]
+  }
 }
