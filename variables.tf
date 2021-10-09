@@ -10,7 +10,6 @@ variable "region" {
 variable "cluster_name" {
   description = "Variable to provide your desired name for the cluster. The script will create a random name if this is empty"
   type        = string
-  default     = ""
 }
 
 variable "cluster_version" {

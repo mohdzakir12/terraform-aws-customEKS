@@ -6,7 +6,6 @@ variable "region" {
 
 variable "cluster_name" {
   type = string
-  default = "default_eks"
 }
 
 variable "cluster_version" {
