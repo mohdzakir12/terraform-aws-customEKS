@@ -72,7 +72,7 @@ provider "kubernetes" {
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
 
-  cluster_version = "1.20"
+  cluster_version = var.cluster_version
   cluster_name    = var.cluster_name
   vpc_id          = module.vpc.vpc_id
   subnets         = module.vpc.public_subnets
@@ -97,7 +97,7 @@ module "eks" {
       min_capacity     = 1
 
       instance_types = ["t3.large"]
-      capacity_type  = "SPOT"
+      #capacity_type  = "SPOT"
       k8s_labels = {
         Environment = "test"
         GithubRepo  = "terraform-aws-eks"
