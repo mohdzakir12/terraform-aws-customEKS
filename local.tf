@@ -1,5 +1,5 @@
 locals{
-    cluster_version = "1.23"
+    # cluster_version = "1.23"
 }
 # locals {
 #   cluster_name      = var.cluster_name != "" ? var.cluster_name : random_pet.current.id
