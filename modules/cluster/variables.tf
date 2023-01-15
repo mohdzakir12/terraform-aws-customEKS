@@ -1,3 +1,6 @@
+variable "name" {
+  default = ""
+}
 variable "region" {
   description = "The region to create the resources into"
   type        = string
