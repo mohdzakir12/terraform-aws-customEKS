@@ -26,6 +26,22 @@ data "aws_caller_identity" "current" {}
 // Create the AWS VPC
 // See https://github.com/terraform-aws-modules/terraform-aws-vpc
 // ----------------------------------------------------------------------------
+
+
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1alpha1"
+    command     = "aws"
+    # This requires the awscli to be installed locally where Terraform is executed
+    args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+  }
+}
+
+
+
 module "vpc" {
   source               = "terraform-aws-modules/vpc/aws"
   version              = "~> 2.70"
@@ -55,20 +71,13 @@ module "vpc" {
 }
 
 //////////////////////////////////////////////////////////////////////
-data "aws_eks_cluster" "eks" {
-  name = module.eks.cluster_id
-}
+# data "aws_eks_cluster" "eks" {
+#   name = module.eks.cluster_id
+# }
 
-data "aws_eks_cluster_auth" "eks" {
-  name = module.eks.cluster_id
-}
-
-provider "kubernetes" {
-  host                   = data.aws_eks_cluster.eks.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.eks.token
-}
-
+# data "aws_eks_cluster_auth" "eks" {
+#   name = module.eks.cluster_id
+# }
 
 
 module "eks" {
@@ -95,89 +104,14 @@ module "eks" {
     }
   }
   
-
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.public_subnets
-
 
   # EKS Managed Node Group(s)
   eks_managed_node_group_defaults = {
     disk_size      = 50
     instance_types = ["r6i.large"]    #["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
   }
-
-  # eks_managed_node_groups = {
-  #   # blue = {}
-  #   # extend_config = {
-  #   #     bootstrap_extra_args = "--container-runtime containerd --kubelet-extra-args '--max-pods=110'"
-        
-  #   #     pre_bootstrap_user_data = <<-EOT
-  #   #     export CONTAINER_RUNTIME="containerd"
-  #   #     export USE_MAX_PODS=false
-  #   #     EOT
-  #   # }
-
-  #   # green = {
-  #   #   create_launch_template = false
-  #   #   launch_template_name   = ""
-
-  #   #   min_size     = 1
-  #   #   max_size     = 10
-  #   #   desired_size = 1
-
-  #   #   instance_types = ["r6i.large"]
-  #   #   capacity_type  = "ON-DEMAND"
-  #   #   enable_bootstrap_user_data = true
-
-  #   #   kubelet_extra_args = "--max-pods=110"
-
-  #   #   pre_bootstrap_user_data = <<-EOT
-  #   #     export CONTAINER_RUNTIME="containerd"
-  #   #     export USE_MAX_PODS=false
-  #   #     EOT
-  #   # }
-  #   group_name = {
-  #     create_launch_template = false
-  #     launch_template_name = ""
-
-  #     pre_bootstrap_user_data = <<-EOT
-  #     #!/bin/bash
-  #     set -ex
-  #     cat <<-EOF > /etc/profile.d/bootstrap.sh
-  #     export CONTAINER_RUNTIME="containerd"
-  #     export USE_MAX_PODS=false
-  #     EOF
-  #     # Source extra environment variables in bootstrap script
-  #     sed -i '/^set -o errexit/a\\nsource /etc/profile.d/bootstrap.sh' /etc/eks/bootstrap.sh
-  #     EOT
-  #   }
-  #   # blueblack = {
-  #   #   name            = "complete-eks-mng"
-  #   #   use_name_prefix = true
-
-  #   #   subnet_ids = module.vpc.private_subnets
-
-  #   #   min_size     = 1
-  #   #   max_size     = 7
-  #   #   desired_size = 1
-  #   #   ami_type = "AL2_x86_64"
-  #   #   subnets         = module.vpc.public_subnets
-  #   #   pre_bootstrap_user_data = <<-EOT
-  #   #     #!/bin/bash
-  #   #     set -ex
-  #   #     cat <<-EOF > /etc/profile.d/bootstrap.sh
-  #   #     export CONTAINER_RUNTIME="containerd"
-  #   #     export USE_MAX_PODS=false
-  #   #     export KUBELET_EXTRA_ARGS="--max-pods=110 --instance-type r6i.large --cni-version 1.10.4 --cni-prefix-delegation-enabled")}"
-  #   #     EOF
-  #   #     # Source extra environment variables in bootstrap script
-  #   #     sed -i '/^set -o errexit/a\\nsource /etc/profile.d/bootstrap.sh' /etc/eks/bootstrap.sh
-  #   #     EOT
-      
-  #   # }
-
-    
-  # }
 
   eks_managed_node_groups = {
     group_name = {
@@ -191,39 +125,15 @@ module "eks" {
   }
 
 
-    # mygrp-ng = {
-    #   #  bootstrap_extra_args       = "--container-runtime containerd --kubelet-extra-args '--max-pods=110'"
-
-    #   pre_bootstrap_user_data = <<-EOT
-    #   #!/bin/bash
-    #   set -ex
-    #   cat <<-EOF > /etc/profile.d/bootstrap.sh
-    #   export CONTAINER_RUNTIME="containerd"
-    #   export USE_MAX_PODS=false
-    #   export KUBELET_EXTRA_ARGS="--max-pods=110"
-    #   EOF
-    #   # Source extra environment variables in bootstrap script
-    #   sed -i '/^set -o errexit/a\\nsource /etc/profile.d/bootstrap.sh' /etc/eks/bootstrap.sh
-    #   EOT
-
-    #   post_bootstrap_user_data = <<-EOT
-    #   echo "you are free little kubelet!"
-    #   EOT
-
-    #   capacity_type        = "SPOT"
-    #   force_update_version = true
-    # }
-
-
   # aws-auth configmap
+  # create_aws_auth_configmap = true
   manage_aws_auth_configmap = true
 
   aws_auth_roles = [
     {
       rolearn  = module.eks.cluster_iam_role_arn
       username = "papu"
-      groups   = ["system:masters"]
-    },
+      groups   = ["system:masters"]    },
   ]
 
   aws_auth_users = [
@@ -235,6 +145,11 @@ module "eks" {
     {
       userarn  = "arn:aws:iam::657907747545:user/m.zakir"
       username = "zakir"
+      groups   = ["system:masters"]
+    },
+    {
+      userarn  = "arn:aws:iam::657907747545:user/ma.rajak"
+      username = "ma.rajak"
       groups   = ["system:masters"]
     },
   ]
