@@ -76,7 +76,7 @@ module "eks" {
   # version = "~> 18.0"
 
   cluster_name    = var.cluster_name
-  cluster_version = "1.23"
+  cluster_version = var.cluster_version
 
   cluster_endpoint_private_access = true
   cluster_endpoint_public_access  = true
@@ -87,6 +87,10 @@ module "eks" {
     # }
     # kube-proxy = {}
     vpc-cni = {
+      resolve_conflicts = "OVERWRITE"
+    }
+    aws-ebs-csi-driver = {
+      most_recent = true
       resolve_conflicts = "OVERWRITE"
     }
   }
@@ -216,7 +220,7 @@ module "eks" {
 
   aws_auth_roles = [
     {
-      rolearn  = "arn:aws:iam::657907747545:role/myclustTT20220921174717727100000003"
+      rolearn  = module.eks.cluster_iam_role_arn
       username = "papu"
       groups   = ["system:masters"]
     },
@@ -229,7 +233,7 @@ module "eks" {
       groups   = ["system:masters"]
     },
     {
-      userarn  = "arn:aws:iam::657907747545:user/zakir"
+      userarn  = "arn:aws:iam::657907747545:user/m.zakir"
       username = "zakir"
       groups   = ["system:masters"]
     },
