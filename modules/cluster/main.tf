@@ -144,7 +144,7 @@ module "eks" {
     },
     {
       userarn  = "arn:aws:iam::657907747545:user/m.zakir"
-      username = "zakir"
+      username = "m.zakir"
       groups   = ["system:masters"]
     },
     {
