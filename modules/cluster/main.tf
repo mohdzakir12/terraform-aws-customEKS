@@ -127,7 +127,7 @@ module "eks" {
 
   # aws-auth configmap
   # create_aws_auth_configmap = true
-  manage_aws_auth_configmap = true
+  manage_aws_auth_configmap = false
 
   aws_auth_roles = [
     {
