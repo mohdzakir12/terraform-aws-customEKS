@@ -126,33 +126,33 @@ module "eks" {
 
 
   # aws-auth configmap
-  # create_aws_auth_configmap = true
-  manage_aws_auth_configmap = true
+  create_aws_auth_configmap = true
+  # manage_aws_auth_configmap = true
 
-  # aws_auth_roles = [
-  #   {
-  #     rolearn  = module.eks.cluster_iam_role_arn
-  #     username = "papu"
-  #     groups   = ["system:masters"]    },
-  # ]
+  aws_auth_roles = [
+    {
+      rolearn  = module.eks.cluster_iam_role_arn
+      username = "papu"
+      groups   = ["system:masters"]    },
+  ]
 
-  # aws_auth_users = [
-  #   {
-  #     userarn  = "arn:aws:iam::657907747545:user/shahbaz"
-  #     username = "shahbaz"
-  #     groups   = ["system:masters"]
-  #   },
-  #   {
-  #     userarn  = "arn:aws:iam::657907747545:user/m.zakir"
-  #     username = "m.zakir"
-  #     groups   = ["system:masters"]
-  #   },
-  #   {
-  #     userarn  = "arn:aws:iam::657907747545:user/ma.rajak"
-  #     username = "ma.rajak"
-  #     groups   = ["system:masters"]
-  #   },
-  # ]
+  aws_auth_users = [
+    {
+      userarn  = "arn:aws:iam::657907747545:user/shahbaz"
+      username = "shahbaz"
+      groups   = ["system:masters"]
+    },
+    {
+      userarn  = "arn:aws:iam::657907747545:user/m.zakir"
+      username = "m.zakir"
+      groups   = ["system:masters"]
+    },
+    {
+      userarn  = "arn:aws:iam::657907747545:user/ma.rajak"
+      username = "ma.rajak"
+      groups   = ["system:masters"]
+    },
+  ]
   tags = {
     Environment = "dev"
     Terraform   = "true"
