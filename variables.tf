@@ -99,7 +99,7 @@ variable "volume_type" {
 variable "volume_size" {
   description = "The volume size in GB"
   type        = number
-  default     = 50
+  default     = 20
 }
 
 variable "iops" {
@@ -113,7 +113,7 @@ variable "iops" {
 variable "vpc_name" {
   description = "The name of the VPC to be created for the cluster"
   type        = string
-  default     = "tf-vpc-eks"
+  default     = "tf-vpc-eks-2"
 }
 
 variable "public_subnets" {

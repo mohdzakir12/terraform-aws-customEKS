@@ -1,14 +1,6 @@
 // ----------------------------------------------------------------------------
 // Query necessary data for the module
 // ----------------------------------------------------------------------------
-# data "aws_eks_cluster" "cluster" {
-#   name = var.cluster_name
-# }
-
-# data "aws_eks_cluster_auth" "cluster" {
-#   name = var.cluster_name
-# }
-
 data "aws_availability_zones" "available" {}
 
 data "aws_caller_identity" "current" {}
@@ -16,18 +8,6 @@ data "aws_caller_identity" "current" {}
 // ----------------------------------------------------------------------------
 // Define K8s cluster configuration
 // ----------------------------------------------------------------------------
-# provider "kubernetes" {
-#   host                   = data.aws_eks_cluster.cluster.endpoint
-#   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
-#   token                  = data.aws_eks_cluster_auth.cluster.token
-# }
-
-// ----------------------------------------------------------------------------
-// Create the AWS VPC
-// See https://github.com/terraform-aws-modules/terraform-aws-vpc
-// ----------------------------------------------------------------------------
-
-
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
@@ -40,8 +20,10 @@ provider "kubernetes" {
   }
 }
 
-
-
+// ----------------------------------------------------------------------------
+// Create the AWS VPC
+// See https://github.com/terraform-aws-modules/terraform-aws-vpc
+// ----------------------------------------------------------------------------
 module "vpc" {
   source               = "terraform-aws-modules/vpc/aws"
   version              = "~> 2.70"
@@ -71,14 +53,6 @@ module "vpc" {
 }
 
 //////////////////////////////////////////////////////////////////////
-# data "aws_eks_cluster" "eks" {
-#   name = module.eks.cluster_id
-# }
-
-# data "aws_eks_cluster_auth" "eks" {
-#   name = module.eks.cluster_id
-# }
-
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
@@ -91,10 +65,6 @@ module "eks" {
   cluster_endpoint_public_access  = true
 
   cluster_addons = {
-    # coredns = {
-    #   resolve_conflicts = "OVERWRITE"
-    # }
-    # kube-proxy = {}
     vpc-cni = {
       resolve_conflicts = "OVERWRITE"
     }
@@ -102,38 +72,58 @@ module "eks" {
       most_recent = true
       resolve_conflicts = "OVERWRITE"
     }
+    csi-snapshot-controller = {
+      most_recent = true
+      resolve_conflicts = "OVERWRITE"
+    }
+    pod-identity-webhook = {
+      most_recent = true
+      resolve_conflicts = "OVERWRITE"
+    }
+    s3-csi-driver = {
+      most_recent = true
+      resolve_conflicts = "OVERWRITE"
+    }
+    efs-csi-driver = {
+      most_recent = true
+      resolve_conflicts = "OVERWRITE"
+    }
+    cloudwatch-agent = {
+      most_recent = true
+      resolve_conflicts = "OVERWRITE"
+    }
+    adot = {
+      most_recent = true
+      resolve_conflicts = "OVERWRITE"
+    }
   }
-  
+
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.public_subnets
 
-  # EKS Managed Node Group(s)
+  // EKS Managed Node Group(s)
   eks_managed_node_group_defaults = {
-    disk_size      = 50
-    instance_types = ["r6i.large"]    #["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
+    disk_size      = 20
+    instance_types = ["r6i.large"]
   }
 
   eks_managed_node_groups = {
     group_name = {
-      ami_id = "ami-0eb9bd067e5d1e192" # set this to an EKS-optimized AMI from data resources (x86 and arm examples below)
+      ami_id = "ami-05d018b6c09ba06ab" // Ensure this is a valid EKS-optimized AMI ID
       create_launch_template = true
-      # launch_template_name = "" # optional if you want your own name
 
       enable_bootstrap_user_data = true
       bootstrap_extra_args = "--container-runtime containerd --kubelet-extra-args '--max-pods=110'"
     }
   }
 
-
-  # aws-auth configmap
-  # create_aws_auth_configmap = true
-  # manage_aws_auth_configmap = true
-
+  // aws-auth configmap
   aws_auth_roles = [
     {
       rolearn  = module.eks.cluster_iam_role_arn
       username = "papu"
-      groups   = ["system:masters"]    },
+      groups   = ["system:masters"]
+    },
   ]
 
   aws_auth_users = [
@@ -143,11 +133,12 @@ module "eks" {
       groups   = ["system:masters"]
     },
     {
-      userarn  = "arn:aws:iam::657907747545:user/ma.rajak"
-      username = "ma.rajak"
+      userarn  = "arn:aws:iam::657907747545:user/eks"
+      username = "eks"
       groups   = ["system:masters"]
     },
   ]
+
   tags = {
     Environment = "dev"
     Terraform   = "true"
